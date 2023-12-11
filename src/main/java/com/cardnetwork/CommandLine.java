@@ -28,5 +28,11 @@ public class CommandLine implements CommandLineRunner{
                 .bodyToMono(ObjectNode.class)
                 .block();
         csvWriterReader.writePublicKey("gateway", objectNode.get("PublicKey").asText());
+        objectNode = webClient.get()
+                .uri("http://banka:8080/getPublic")
+                .retrieve()
+                .bodyToMono(ObjectNode.class)
+                .block();
+        csvWriterReader.writePublicKey("BankA", objectNode.get("PublicKey").asText());
     }
 }
