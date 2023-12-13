@@ -26,7 +26,7 @@ public class PaymentController {
     @PostMapping("/payment")
     public ObjectNode payment(@RequestBody ObjectNode cardRequest) throws Exception {
         ObjectNode objectNode = rsaKeyGenerator.decryptObjectNode(cardRequest.get("object").asText(),csvWriterReader.readMyPrivate());
-        if (objectNode.get("id").asInt() != atomicID.getID()){
+        if (objectNode.get("ID").asInt() != atomicID.getID()){
             objectNode.put("status","Invalid");
         }
         String encrypted = rsaKeyGenerator.encryptObjectNode(objectNode,csvWriterReader.readPublic("BankA"));
