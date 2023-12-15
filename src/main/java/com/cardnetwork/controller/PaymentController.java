@@ -1,10 +1,6 @@
 package com.cardnetwork.controller;
 
-import com.cardnetwork.AtomicID;
-import com.cardnetwork.CommunicatorService;
-import com.cardnetwork.utility.CsvWriterReader;
-import com.cardnetwork.utility.RSAKeyGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.cardnetwork.Service.PaymentService;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,32 +12,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping
 public class PaymentController {
     @Autowired
-    RSAKeyGenerator rsaKeyGenerator;
-    @Autowired
-    CsvWriterReader csvWriterReader;
-    @Autowired
-    CommunicatorService communicatorService;
-    @Autowired
-    AtomicID atomicID;
+    private PaymentService paymentService;
     @PostMapping("/payment")
     public ObjectNode payment(@RequestBody ObjectNode cardRequest) throws Exception {
-        ObjectNode objectNode = rsaKeyGenerator.decryptObjectNode(cardRequest.get("object").asText(),csvWriterReader.readMyPrivate());
-        if (objectNode.get("ID").asInt() != atomicID.getID()){
-            objectNode.put("status","Invalid");
-        }
-        String encrypted = rsaKeyGenerator.encryptObjectNode(objectNode,csvWriterReader.readPublic("BankA"));
-        ObjectNode objectNode1 = communicatorService.authenticateBank(new ObjectMapper().createObjectNode().put("object",encrypted));
-        objectNode = rsaKeyGenerator.decryptObjectNode(objectNode1.get("object").asText(),csvWriterReader.readMyPrivate());
-        encrypted = rsaKeyGenerator.encryptObjectNode(objectNode,csvWriterReader.readPublic("gateway"));
-        return new ObjectMapper().createObjectNode().put("object",encrypted);
+        return paymentService.authenticateBank(cardRequest);
     }
     @PostMapping("/authorize")
     public ObjectNode authorize(@RequestBody ObjectNode objectNode) throws Exception {
-        ObjectNode objectNode1 = rsaKeyGenerator.decryptObjectNode(objectNode.get("object").asText(),csvWriterReader.readMyPrivate());
-        String encrypted = rsaKeyGenerator.encryptObjectNode(objectNode1,csvWriterReader.readPublic("BankA"));
-        objectNode1 = communicatorService.authorizeBank(new ObjectMapper().createObjectNode().put("object",encrypted));
-        objectNode = rsaKeyGenerator.decryptObjectNode(objectNode1.get("object").asText(),csvWriterReader.readMyPrivate());
-        encrypted = rsaKeyGenerator.encryptObjectNode(objectNode,csvWriterReader.readPublic("gateway"));
-        return new ObjectMapper().createObjectNode().put("object",encrypted);
+        ObjectNode objectNode1 = paymentService.authorizationBank(objectNode);
+        System.out.println(objectNode1);
+        return objectNode1;
     }
 }
