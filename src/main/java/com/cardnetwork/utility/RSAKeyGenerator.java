@@ -20,7 +20,7 @@ public class RSAKeyGenerator {
         return keyPair;
     }
 
-    public String encryptObjectNode(ObjectNode objectNode, PublicKey publicKey) throws Exception {
+    public ObjectNode encryptObjectNode(ObjectNode objectNode, PublicKey publicKey) throws Exception {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writeValueAsString(objectNode);
 
@@ -30,14 +30,15 @@ public class RSAKeyGenerator {
 
         byte[] encryptedBytes = cipher.doFinal(jsonString.getBytes());
 
-        return Base64.getEncoder().encodeToString(encryptedBytes);
+        String encrypted = Base64.getEncoder().encodeToString(encryptedBytes);
+        return objectMapper.createObjectNode().put("object",encrypted);
     }
 
-    public ObjectNode decryptObjectNode(String encryptedData, PrivateKey privateKey) throws Exception {
+    public ObjectNode decryptObjectNode(ObjectNode encryptedData, PrivateKey privateKey) throws Exception {
         Cipher cipher = Cipher.getInstance("RSA");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
-
-        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
+        String encrypted = encryptedData.get("object").asText();
+        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encrypted));
         ObjectMapper objectMapper = new ObjectMapper();
         return (ObjectNode) objectMapper.readTree(new String(decryptedBytes));
     }

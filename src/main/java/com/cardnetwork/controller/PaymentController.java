@@ -23,4 +23,8 @@ public class PaymentController {
         System.out.println(objectNode1);
         return objectNode1;
     }
+    @PostMapping("/depositRedirect")
+    public ObjectNode redirectDeposit(@RequestBody ObjectNode request) throws Exception {
+        return paymentService.redirectDeposit(request);
+    }
 }
